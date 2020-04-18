@@ -10,7 +10,7 @@ namespace BrightnessSwitch
     {
         private LightSensor Sensor;
         private bool LightThemeEnabled;
-        private float IlluminanceThreshold;
+        public float IlluminanceThreshold;
         private RegistryKey PersonalizationRegKey;
 
         public LightControl(uint sensorInterval = 10_000, float illuminanceThreshold = 5000)
@@ -36,11 +36,11 @@ namespace BrightnessSwitch
             }
             if (!LightThemeEnabled && sensorEvent.Reading.IlluminanceInLux > IlluminanceThreshold * 1.1)
             {
-                SetTheme(true);
+                SetTheme(useLightTheme: true);
             }
             if (LightThemeEnabled && sensorEvent.Reading.IlluminanceInLux < IlluminanceThreshold / 1.1)
             {
-                SetTheme(false);
+                SetTheme(useLightTheme:false);
             }
         }
 

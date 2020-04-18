@@ -8,7 +8,7 @@ namespace BrightnessSwitch
         [STAThread]
         static void Main(string[] args)
         {
-            var brightnessControl = new LightControl();
+            var lightControl = new LightControl();
             Application.Run();
         }
     }
