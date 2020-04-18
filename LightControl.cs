@@ -6,12 +6,16 @@ using Windows.UI.ViewManagement;
 
 namespace BrightnessSwitch
 {
+    public delegate bool? PredictionCallback(float illuminanceInLux);
+
     public class LightControl
     {
         private LightSensor Sensor;
-        private bool LightThemeEnabled;
+        private bool? LightThemeEnabled = null;
         public float IlluminanceThreshold;
         private RegistryKey PersonalizationRegKey;
+        public event PredictionCallback? PredictionCallback;
+        public event EventHandler<bool>? OnThemeSwitch;
 
         public LightControl(uint sensorInterval = 10_000, float illuminanceThreshold = 5000)
         {
@@ -28,27 +32,50 @@ namespace BrightnessSwitch
                 ?? throw new Exception("A required registry key can't be accessed.");
         }
 
+        public float GetCurrentIlluminance()
+        {
+            return Sensor.GetCurrentReading()?.IlluminanceInLux ?? 0;
+        }
+
         private void LightReadingChanged(LightSensor sensor, LightSensorReadingChangedEventArgs sensorEvent)
         {
             if (sensorEvent.Reading == null)
             {
                 return;
             }
-            if (!LightThemeEnabled && sensorEvent.Reading.IlluminanceInLux > IlluminanceThreshold * 1.1)
+
+            bool? useLightTheme = null;
+            if (PredictionCallback != null)
             {
-                SetTheme(useLightTheme: true);
+                useLightTheme = PredictionCallback(sensorEvent.Reading.IlluminanceInLux);
             }
-            if (LightThemeEnabled && sensorEvent.Reading.IlluminanceInLux < IlluminanceThreshold / 1.1)
+            else
             {
-                SetTheme(useLightTheme:false);
+                if (sensorEvent.Reading.IlluminanceInLux > IlluminanceThreshold * 1.1)
+                {
+                    useLightTheme = true;
+                }
+                if (sensorEvent.Reading.IlluminanceInLux < IlluminanceThreshold / 1.1)
+                {
+                    useLightTheme = false;
+                }
+            }
+
+            if (useLightTheme != null && LightThemeEnabled != useLightTheme)
+            {
+                LightThemeEnabled = useLightTheme.Value;
+                SetTheme(useLightTheme.Value);
             }
         }
 
-        private void SetTheme(bool useLightTheme)
+        public void SetTheme(bool useLightTheme)
         {
-            LightThemeEnabled = useLightTheme;
             PersonalizationRegKey.SetValue("AppsUseLightTheme", useLightTheme, RegistryValueKind.DWord);
             PersonalizationRegKey.SetValue("SystemUsesLightTheme", useLightTheme, RegistryValueKind.DWord);
+            if (OnThemeSwitch != null)
+            {
+                OnThemeSwitch(this, useLightTheme);
+            }
         }
     }
 }
