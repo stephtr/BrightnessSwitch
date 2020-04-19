@@ -1,5 +1,7 @@
 # BrightnessSwitch
 
+[![Total downloads](https://img.shields.io/github/downloads/stephtr/BrightnessSwitch/total.svg)](https://github.com/stephtr/BrightnessSwitch/releases) _- hopefully increasing soon 😉_
+
 This small app automatically switches between Light- and Dark-Theme, depending on the illuminance detected via your device's light sensor.
 
 ![Screenshot](screenshot.png)
@@ -7,6 +9,12 @@ This small app automatically switches between Light- and Dark-Theme, depending o
 In order to control the switching mechanism, it adds a tray icon where one can enable or disable automatic switching of themes, but also an option to manually switch the theme.
 
 If automatic switching is enabled and one switches the theme, machine learning (support vector machine, to be precise) is being used for optimizing the automatic switching mechanism.
+
+## Download
+
+* .zip package: [Latest release](https://github.com/stephtr/BrightnessSwitch/releases)
+* Installer: coming soon...
+* Microsoft Store: under consideration
 
 ## Running the app
 
