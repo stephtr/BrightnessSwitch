@@ -1,6 +1,3 @@
-#define ENABLE_UPDATE_CHECKS
-#define ENABLE_AUTORUN
-
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -8,8 +5,10 @@ using System.Drawing;
 using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Win32;
+using Windows.ApplicationModel;
 
 namespace BrightnessSwitch
 {
@@ -46,7 +45,7 @@ namespace BrightnessSwitch
                 if (OnExit != null) OnExit(this, 0);
             });
 
-#if ENABLE_UPDATE_CHECKS
+#if !STORE
             contextMenu.Items.Add("Check for updates", null, (object? sender, EventArgs args) =>
             {
                 contextMenu.Close();
@@ -54,13 +53,11 @@ namespace BrightnessSwitch
             });
 #endif
 
-#if ENABLE_AUTORUN
             autorunItem = new ToolStripMenuItem("Autostart with Windows");
-            autorunItem.Checked = GetAutorun();
-            autorunItem.CheckedChanged += (object? sender, EventArgs e) => SetAutorun(autorunItem.Checked);
+            GetAutorun().ContinueWith((Task<bool> task) => autorunItem.Checked = task.Result);
+            autorunItem.CheckedChanged += async (object? sender, EventArgs e) => autorunItem.Checked = await SetAutorun(autorunItem.Checked);
             autorunItem.CheckOnClick = true;
             contextMenu.Items.Add(autorunItem);
-#endif
 
             contextMenu.Items.Add("-");
 
@@ -119,17 +116,53 @@ namespace BrightnessSwitch
             trayIcon.Visible = true;
         }
 
-#if ENABLE_AUTORUN
+#if STORE
+        private async Task<bool> GetAutorun()
+        {
+            var startupTask = await StartupTask.GetAsync("BrightnessSwitch");
+            return startupTask.State == StartupTaskState.Enabled || startupTask.State == StartupTaskState.EnabledByPolicy;
+        }
+
+        private async Task<bool> SetAutorun(bool activate)
+        {
+            var startupTask = await StartupTask.GetAsync("BrightnessSwitch");
+            if (activate)
+            {
+                switch (startupTask.State)
+                {
+                    case StartupTaskState.Disabled:
+                        var newState = await startupTask.RequestEnableAsync();
+                        return newState == StartupTaskState.Enabled || newState == StartupTaskState.EnabledByPolicy;
+                    case StartupTaskState.DisabledByPolicy:
+                        MessageBox.Show("Can't enable autostart (disabled by policy)", "BrightnessSwitch", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return false;
+                    case StartupTaskState.DisabledByUser:
+                        MessageBox.Show("To enable autostart, you have to use the Task Manager -> Startup tab.", "BrightnessSwitch", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        return false;
+                    case StartupTaskState.Enabled:
+                    case StartupTaskState.EnabledByPolicy:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+            else
+            {
+                startupTask.Disable();
+                return false;
+            }
+        }
+#else
         private const string autorunKey = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run";
         private const string autorunValue = "BrightnessSwitch";
 
-        private bool GetAutorun()
+        private Task<bool> GetAutorun()
         {
             var arKey = Registry.CurrentUser.OpenSubKey(autorunKey)!;
-            return (string?)arKey.GetValue(autorunValue) == Application.ExecutablePath.ToString();
+            return Task.FromResult((string?)arKey.GetValue(autorunValue) == Application.ExecutablePath.ToString());
         }
 
-        private void SetAutorun(bool activate)
+        private Task<bool> SetAutorun(bool activate)
         {
             var arKey = Registry.CurrentUser.OpenSubKey(autorunKey, true)!;
             if (activate)
@@ -140,10 +173,11 @@ namespace BrightnessSwitch
             {
                 arKey.DeleteValue(autorunValue);
             }
+            return Task.FromResult(activate);
         }
 #endif
 
-#if ENABLE_UPDATE_CHECKS
+#if !STORE
         private async void CheckUpdates(bool showOptionalMessages = true)
         {
             const string updateUrl = "https://api.github.com/repos/stephtr/BrightnessSwitch/releases/latest";
