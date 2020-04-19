@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
+using Microsoft.Win32;
 using Windows.UI.ViewManagement;
 
 namespace BrightnessSwitch
@@ -11,6 +12,7 @@ namespace BrightnessSwitch
     {
         private NotifyIcon trayIcon;
         private ToolStripMenuItem autoSwitchItem;
+        private ToolStripMenuItem autorunItem;
         private ToolStripItem switchItem;
         public event EventHandler<int>? OnExit;
         public event EventHandler<bool>? OnThemeSwitch;
@@ -25,12 +27,14 @@ namespace BrightnessSwitch
             trayIcon.Icon = DarkIcon;
             trayIcon.Visible = true;
             trayIcon.Text = "Switch Theme brightness";
-            trayIcon.ContextMenuStrip = new ContextMenuStrip();
-            switchItem = trayIcon.ContextMenuStrip.Items.Add("Switch theme", null, (object? sender, EventArgs args) =>
+            var contextMenu = trayIcon.ContextMenuStrip = new ContextMenuStrip();
+
+            switchItem = contextMenu.Items.Add("Switch theme", null, (object? sender, EventArgs args) =>
             {
-                trayIcon.ContextMenuStrip.Close();
+                contextMenu.Close();
                 if (OnThemeSwitch != null) OnThemeSwitch(this, SwitchToLightMode);
             });
+
             autoSwitchItem = new ToolStripMenuItem("Auto switch theme");
             autoSwitchItem.Checked = AutoSwitchEnabled;
             autoSwitchItem.CheckOnClick = true;
@@ -39,21 +43,30 @@ namespace BrightnessSwitch
                 AutoSwitchEnabled = autoSwitchItem.Checked;
                 UpdateContextMenu();
             };
-            trayIcon.ContextMenuStrip.Items.Add(autoSwitchItem);
-            trayIcon.ContextMenuStrip.Items.Add("-");
-            trayIcon.ContextMenuStrip.Items.Add("Exit", null, (object? sender, EventArgs args) =>
+            contextMenu.Items.Add(autoSwitchItem);
+
+            contextMenu.Items.Add("-");
+
+            autorunItem = new ToolStripMenuItem("Autostart with Windows");
+            autorunItem.Checked = GetAutorun();
+            autorunItem.CheckedChanged += (object? sender, EventArgs e) => SetAutorun(autorunItem.Checked);
+            autorunItem.CheckOnClick = true;
+            contextMenu.Items.Add(autorunItem);
+
+            contextMenu.Items.Add("Exit", null, (object? sender, EventArgs args) =>
             {
-                trayIcon.ContextMenuStrip.Close();
+                contextMenu.Close();
                 if (OnExit != null) OnExit(this, 0);
             });
 
             trayIcon.Click += (object? sender, EventArgs e) =>
             {
+                // taken from https://stackoverflow.com/a/2208910
                 var mi = typeof(NotifyIcon).GetMethod("ShowContextMenu", BindingFlags.Instance | BindingFlags.NonPublic);
                 mi!.Invoke(trayIcon, null);
             };
-            trayIcon.ContextMenuStrip.Opening += (object? sender, CancelEventArgs e) => UpdateContextMenu();
-            trayIcon.ContextMenuStrip.Closing += (object? sender, ToolStripDropDownClosingEventArgs e) =>
+            contextMenu.Opening += (object? sender, CancelEventArgs e) => UpdateContextMenu();
+            contextMenu.Closing += (object? sender, ToolStripDropDownClosingEventArgs e) =>
             {
                 if (e.CloseReason == ToolStripDropDownCloseReason.ItemClicked)
                 {
@@ -73,6 +86,25 @@ namespace BrightnessSwitch
         public void SetTheme(bool useLightTheme)
         {
             trayIcon.Icon = useLightTheme ? LightIcon : DarkIcon;
+        }
+
+        private bool GetAutorun()
+        {
+            var arKey = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run")!;
+            return (string?)arKey.GetValue("BrightnessSwitch") == Application.ExecutablePath.ToString();
+        }
+
+        private void SetAutorun(bool activate)
+        {
+            var arKey = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true)!;
+            if (activate)
+            {
+                arKey.SetValue("BrightnessSwitch", Application.ExecutablePath.ToString());
+            }
+            else
+            {
+                arKey.DeleteValue("BrightnessSwitch");
+            }
         }
 
         ~TrayIcon()
