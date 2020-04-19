@@ -1,3 +1,5 @@
+#define ENABLE_UPDATE_CHECKS
+
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -27,7 +29,6 @@ namespace BrightnessSwitch
 
         private const string autorunKey = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run";
         private const string autorunValue = "BrightnessSwitch";
-        private const string updateUrl = "https://api.github.com/repos/stephtr/BrightnessSwitch/releases/latest";
 
         public TrayIcon()
         {
@@ -49,11 +50,13 @@ namespace BrightnessSwitch
                 if (OnExit != null) OnExit(this, 0);
             });
 
+#if ENABLE_UPDATE_CHECKS
             contextMenu.Items.Add("Check for updates", null, (object? sender, EventArgs args) =>
             {
                 contextMenu.Close();
                 CheckUpdates();
             });
+#endif
 
             autorunItem = new ToolStripMenuItem("Autostart with Windows");
             autorunItem.Checked = GetAutorun();
@@ -132,8 +135,11 @@ namespace BrightnessSwitch
             }
         }
 
+#if ENABLE_UPDATE_CHECKS
         private async void CheckUpdates(bool showOptionalMessages = true)
         {
+            const string updateUrl = "https://api.github.com/repos/stephtr/BrightnessSwitch/releases/latest";
+            
             Version currentVersion = Assembly.GetExecutingAssembly().GetName().Version!;
             using var wc = new WebClient();
             wc.Headers.Add("User-Agent", "BrightnessSwitch");
@@ -169,5 +175,6 @@ namespace BrightnessSwitch
                 }
             }
         }
+#endif
     }
 }
