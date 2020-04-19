@@ -35,9 +35,9 @@ else:
                              np.exp(b - 1 / w), 2, facecolor='k', alpha=0.1)
     plt.gca().add_patch(rect)
 
-    plt.scatter(darkList, [0 for i in range(nDark)],
+    plt.scatter(darkList, (np.random.random(nDark) - 0.5) * 0.4,
                 [entry * 100 for entry in darkWeights], 'k', alpha=0.25, linewidths=0)
-    plt.scatter(lightList, [0 for i in range(nLight)],
+    plt.scatter(lightList, (np.random.random(nLight) - 0.5) * 0.4,
                 [entry * 100 for entry in lightWeights], 'y', alpha=0.25, linewidths=0)
 
     plt.semilogx()
