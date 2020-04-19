@@ -141,7 +141,7 @@ namespace BrightnessSwitch
             {
                 var data = await wc.DownloadStringTaskAsync(updateUrl);
                 var tagMatch = new Regex("\"tag_name\"[^\"]+\"([^\"]+)\"").Match(data);
-                var urlMatch = new Regex("\"html_url\"[^\"]+\"(https://github.com/[^\"]+)\"").Match(data);
+                var urlMatch = new Regex("\"html_url\"[^\"]+\"(https://github\\.com/[^\"]+)\"").Match(data);
                 var newVersion = new Version(tagMatch.Groups[1].Value);
                 var releaseUrl = urlMatch.Groups[1].Value;
                 if (currentVersion < newVersion)
