@@ -78,7 +78,17 @@ namespace BrightnessSwitch
         {
             LoadSettings();
 
-            var lightControl = new LightControl();
+            LightControl lightControl = null!;
+            try
+            {
+                lightControl = new LightControl();
+            }
+            catch (NotSupportedException)
+            {
+                MessageBox.Show("This app can't run on your device, since it has no light sensor.", "BrightnessSwitch", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
             lightControl.PredictionCallback += (float illuminanceInLux) =>
             {
                 var (prediction, certainty) = predictionModel.Predict(Math.Log(illuminanceInLux));
@@ -89,7 +99,7 @@ namespace BrightnessSwitch
             trayIcon.OnExit += (object? sender, int reason) => Application.Exit();
             trayIcon.OnThemeSwitch += (object? sender, bool useLightTheme) =>
             {
-                if (trayIcon.AutoSwitchEnabled) // Otherwise we don't have to learn it
+                if (trayIcon.AutoSwitchEnabled) // Otherwise we don't have to learn from the current action
                 {
                     var currentIlluminance = lightControl.GetCurrentIlluminance();
                     if (currentIlluminance > 0)

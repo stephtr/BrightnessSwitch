@@ -146,7 +146,7 @@ namespace BrightnessSwitch
                 var releaseUrl = urlMatch.Groups[1].Value;
                 if (currentVersion < newVersion)
                 {
-                    if (MessageBox.Show("There is a new version available. Do you want to go to the download page?", "Updating BrightnessSwitch", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    if (MessageBox.Show("There is a new version available. Do you want to go to the download page?", "Updating BrightnessSwitch", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                     {
                         var psi = new ProcessStartInfo
                         {
@@ -158,14 +158,14 @@ namespace BrightnessSwitch
                 }
                 else if (showOptionalMessages)
                 {
-                    MessageBox.Show("You are already using the latest version.", "Updating BrightnessSwitch");
+                    MessageBox.Show("You are already using the latest version.", "Updating BrightnessSwitch", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
             catch
             {
                 if (showOptionalMessages)
                 {
-                    MessageBox.Show("Error downloading the update information", "Updating BrightnessSwitch");
+                    MessageBox.Show("Error downloading the update information", "Updating BrightnessSwitch", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }

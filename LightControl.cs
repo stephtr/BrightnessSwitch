@@ -24,6 +24,10 @@ namespace BrightnessSwitch
             IlluminanceThreshold = illuminanceThreshold;
 
             Sensor = LightSensor.GetDefault();
+            if (Sensor == null)
+            {
+                throw new NotSupportedException("No light sensor present");
+            }
             Sensor.ReportInterval = Math.Max(Sensor.MinimumReportInterval, sensorInterval);
             Sensor.ReadingChanged += new TypedEventHandler<LightSensor, LightSensorReadingChangedEventArgs>(LightReadingChanged);
 
