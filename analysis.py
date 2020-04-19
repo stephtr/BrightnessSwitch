@@ -7,12 +7,23 @@ import struct
 
 filename = os.getenv('LOCALAPPDATA') + '\\BrightnessSwitch.config'
 file = open(filename, mode='rb')
-header = file.read(4)
 
-if header != b'BSv1':
-    print('Can\'t read the configuration file.')
-    file.close()
-else:
+try:
+    if file.read(2) != b'BS':
+        raise Exception()
+    versionFlag = file.read(1)
+    if versionFlag == b'v':
+        if file.read(1) != b'1':
+            raise Exception()
+    elif versionFlag == b'+':
+        version = struct.unpack('I', file.read(4))[0]
+        if version == 2:
+            file.read(1)  # auto
+        else:
+            raise Exception()
+    else:
+        raise Exception()
+
     b = struct.unpack('d', file.read(8))[0]
     w = struct.unpack('d', file.read(8))[0]
     nDark = struct.unpack('i', file.read(4))[0]
@@ -27,6 +38,7 @@ else:
     for i in range(nLight):
         lightList.append(np.exp(struct.unpack('d', file.read(8))[0]))
         lightWeights.append(0.2 + (i + 1) / nLight)
+    file.close()
 
     plt.figure(figsize=(6, 2))
 
@@ -48,3 +60,6 @@ else:
     plt.gca().axes.get_yaxis().set_ticks([])
     plt.tight_layout()
     plt.show()
+except:
+    print('Can\'t read the configuration file.')
+    file.close()

@@ -1,10 +1,10 @@
 #define ENABLE_UPDATE_CHECKS
+#define ENABLE_AUTORUN
 
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
-using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -16,29 +16,27 @@ namespace BrightnessSwitch
     class TrayIcon
     {
         private NotifyIcon trayIcon;
-        private ToolStripMenuItem autoSwitchItem;
+        private ToolStripMenuItem? autoSwitchItem = null;
         private ToolStripMenuItem autorunItem;
         private ToolStripItem switchItem;
         public event EventHandler<int>? OnExit;
         public event EventHandler<bool>? OnThemeSwitch;
         private Icon DarkIcon;
         private Icon LightIcon;
-        public bool AutoSwitchEnabled { get; private set; } = true;
+        public bool AutoSwitchEnabled { get; private set; }
         private bool SwitchToLightMode;
 
-        private const string autorunKey = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run";
-        private const string autorunValue = "BrightnessSwitch";
-
-        public TrayIcon()
+        public TrayIcon(bool autoSwitchEnabled = true, bool autoModeAvailable = true)
         {
+            AutoSwitchEnabled = autoSwitchEnabled;
+
             var assembly = Assembly.GetExecutingAssembly();
             using (var stream = assembly.GetManifestResourceStream("BrightnessSwitch.Resources.IconSunDark"))
-                DarkIcon = new Icon(stream);
+                DarkIcon = new Icon(stream!);
             using (var stream = assembly.GetManifestResourceStream("BrightnessSwitch.Resources.IconSunLight"))
-                LightIcon = new Icon(stream);
+                LightIcon = new Icon(stream!);
 
             trayIcon = new NotifyIcon();
-            trayIcon.Visible = true;
             trayIcon.Text = "Switch Theme brightness";
             var contextMenu = trayIcon.ContextMenuStrip = new ContextMenuStrip();
 
@@ -56,11 +54,13 @@ namespace BrightnessSwitch
             });
 #endif
 
+#if ENABLE_AUTORUN
             autorunItem = new ToolStripMenuItem("Autostart with Windows");
             autorunItem.Checked = GetAutorun();
             autorunItem.CheckedChanged += (object? sender, EventArgs e) => SetAutorun(autorunItem.Checked);
             autorunItem.CheckOnClick = true;
             contextMenu.Items.Add(autorunItem);
+#endif
 
             contextMenu.Items.Add("-");
 
@@ -70,15 +70,18 @@ namespace BrightnessSwitch
                 if (OnThemeSwitch != null) OnThemeSwitch(this, SwitchToLightMode);
             });
 
-            autoSwitchItem = new ToolStripMenuItem("Auto switch theme");
-            autoSwitchItem.Checked = AutoSwitchEnabled;
-            autoSwitchItem.CheckOnClick = true;
-            autoSwitchItem.CheckedChanged += (object? sender, EventArgs e) =>
+            if (autoSwitchEnabled)
             {
-                AutoSwitchEnabled = autoSwitchItem.Checked;
-                UpdateContextMenu();
-            };
-            contextMenu.Items.Add(autoSwitchItem);
+                autoSwitchItem = new ToolStripMenuItem("Auto switch theme");
+                autoSwitchItem.Checked = autoSwitchEnabled && AutoSwitchEnabled;
+                autoSwitchItem.CheckOnClick = true;
+                autoSwitchItem.CheckedChanged += (object? sender, EventArgs e) =>
+                {
+                    AutoSwitchEnabled = autoSwitchItem.Checked;
+                    UpdateContextMenu();
+                };
+                contextMenu.Items.Add(autoSwitchItem);
+            }
 
             trayIcon.Click += (object? sender, EventArgs e) =>
             {
@@ -113,7 +116,12 @@ namespace BrightnessSwitch
         public void SetTheme(bool useLightTheme)
         {
             trayIcon.Icon = useLightTheme ? LightIcon : DarkIcon;
+            trayIcon.Visible = true;
         }
+
+#if ENABLE_AUTORUN
+        private const string autorunKey = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run";
+        private const string autorunValue = "BrightnessSwitch";
 
         private bool GetAutorun()
         {
@@ -133,6 +141,7 @@ namespace BrightnessSwitch
                 arKey.DeleteValue(autorunValue);
             }
         }
+#endif
 
 #if ENABLE_UPDATE_CHECKS
         private async void CheckUpdates(bool showOptionalMessages = true)

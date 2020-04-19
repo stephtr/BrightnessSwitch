@@ -1,6 +1,5 @@
 using Windows.UI.ViewManagement;
-using Microsoft.Win32;
-using System;
+using System.Diagnostics;
 
 namespace BrightnessSwitch
 {
@@ -12,16 +11,21 @@ namespace BrightnessSwitch
             return uiSettings.GetColorValue(UIColorType.Background).ToString() == "#FFFFFFFF";
         }
 
-        private static RegistryKey? PersonalizationRegKey = null;
         public static void SetTheme(bool useLightTheme)
         {
-            if (PersonalizationRegKey == null)
+            try
             {
-                PersonalizationRegKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize", true)
-                    ?? throw new Exception("A required registry key can't be accessed.");
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "reg",
+                    Arguments = @"ADD HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize /v AppsUseLightTheme /t REG_DWORD /d " + (useLightTheme ? "1" : "0") + " /f",
+                    CreateNoWindow = true,
+                };
+                Process.Start(psi);
+                psi.Arguments = @"ADD HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize /v SystemUsesLightTheme /t REG_DWORD /d " + (useLightTheme ? "1" : "0") + " /f";
+                Process.Start(psi);
             }
-            PersonalizationRegKey.SetValue("AppsUseLightTheme", useLightTheme, RegistryValueKind.DWord);
-            PersonalizationRegKey.SetValue("SystemUsesLightTheme", useLightTheme, RegistryValueKind.DWord);
+            catch { }
         }
     }
 }

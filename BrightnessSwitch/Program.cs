@@ -1,101 +1,34 @@
 ﻿using System;
-using System.Linq;
-using System.Collections.Generic;
 using System.Windows.Forms;
-using System.IO;
-using System.Text;
 
 namespace BrightnessSwitch
 {
     class Program
     {
-        static string settingsFilename = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\BrightnessSwitch.config";
-        static string settingsFileHeader = "BSv1";
-        static bool canSaveSettings = true;
-
-        static List<double> interventionDarkList = new List<double>();
-        static List<double> interventionLightList = new List<double>();
         static int maxInterventionCount = 100;
         static SupportVectorMachine predictionModel = new SupportVectorMachine();
 
-        public static void LoadSettings()
-        {
-            float defaultIlluminanceThreshold = 5000; // Lux
-            interventionDarkList.Clear();
-            interventionLightList.Clear();
-
-            try
-            {
-                using var reader = new BinaryReader(new FileStream(settingsFilename, FileMode.Open), Encoding.ASCII);
-                if (new string(reader.ReadChars(4)) != settingsFileHeader)
-                {
-                    canSaveSettings = false;
-                    throw new IOException();
-                }
-                predictionModel.b = reader.ReadDouble();
-                predictionModel.w = reader.ReadDouble();
-                var darkCount = reader.ReadInt32();
-                var lightCount = reader.ReadInt32();
-                for (var i = 0; i < darkCount; i++)
-                {
-                    interventionDarkList.Add(reader.ReadDouble());
-                }
-                for (var i = 0; i < lightCount; i++)
-                {
-                    interventionLightList.Add(reader.ReadDouble());
-                }
-            }
-            catch
-            {
-                predictionModel.b = Math.Log(defaultIlluminanceThreshold);
-                predictionModel.w = Math.Log(defaultIlluminanceThreshold) * 0.1;
-
-                interventionDarkList.Add(Math.Log(defaultIlluminanceThreshold) * 0.9);
-                interventionLightList.Add(Math.Log(defaultIlluminanceThreshold) * 1.1);
-            }
-        }
-
-        public static void SaveSettings()
-        {
-            if (!canSaveSettings) return;
-            try
-            {
-                using var writer = new BinaryWriter(new FileStream(settingsFilename, FileMode.Create), Encoding.ASCII);
-                writer.Write(settingsFileHeader.ToCharArray());
-                writer.Write(predictionModel.b);
-                writer.Write(predictionModel.w);
-                writer.Write(interventionDarkList.Count);
-                writer.Write(interventionLightList.Count);
-                interventionDarkList.ForEach((v) => writer.Write(v));
-                interventionLightList.ForEach((v) => writer.Write(v));
-                writer.Close();
-            }
-            catch { }
-        }
 
         [STAThread]
         static void Main(string[] args)
         {
-            LoadSettings();
+            var settings = new Settings();
+            var currentSettings = settings.LoadSettings();
+            predictionModel.b = currentSettings.predictionB;
+            predictionModel.w = currentSettings.predictionW;
 
-            LightControl lightControl = null!;
-            try
-            {
-                lightControl = new LightControl();
-            }
-            catch (NotSupportedException)
-            {
-                MessageBox.Show("This app can't run on your device, since it has no light sensor.", "BrightnessSwitch", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
+            LightControl lightControl = new LightControl();
 
+            var trayIcon = new TrayIcon(currentSettings.enableLightAutomatic, lightControl.LightSensorAvailable);
             lightControl.PredictionCallback += (float illuminanceInLux) =>
             {
+                if (!trayIcon.AutoSwitchEnabled)
+                {
+                    return null;
+                }
                 var (prediction, certainty) = predictionModel.Predict(Math.Log(illuminanceInLux));
                 return certainty > 0.5 ? (bool?)prediction : null;
             };
-
-            var trayIcon = new TrayIcon();
             trayIcon.OnExit += (object? sender, int reason) => Application.Exit();
             trayIcon.OnThemeSwitch += (object? sender, bool useLightTheme) =>
             {
@@ -108,48 +41,48 @@ namespace BrightnessSwitch
                         {
                             if (useLightTheme)
                             {
-                                interventionLightList.Add(Math.Log(currentIlluminance));
-                                while (interventionLightList.Count > maxInterventionCount)
+                                settings.interventionLightList.Add(Math.Log(currentIlluminance));
+                                while (settings.interventionLightList.Count > maxInterventionCount)
                                 {
-                                    interventionLightList.RemoveAt(0);
+                                    settings.interventionLightList.RemoveAt(0);
                                 }
                             }
                             else
                             {
-                                interventionDarkList.Add(Math.Log(currentIlluminance));
-                                while (interventionDarkList.Count > maxInterventionCount)
+                                settings.interventionDarkList.Add(Math.Log(currentIlluminance));
+                                while (settings.interventionDarkList.Count > maxInterventionCount)
                                 {
-                                    interventionDarkList.RemoveAt(0);
+                                    settings.interventionDarkList.RemoveAt(0);
                                 }
                             }
-                            if (interventionDarkList.Count < 1 || interventionLightList.Count < 1)
+                            if (settings.interventionDarkList.Count < 1 || settings.interventionLightList.Count < 1)
                             {
                                 break;
                             }
-                            var interventionCount = interventionDarkList.Count + interventionLightList.Count;
+                            var interventionCount = settings.interventionDarkList.Count + settings.interventionLightList.Count;
                             var illuminances = new double[interventionCount];
                             var lightThemes = new bool[interventionCount];
                             var weights = new double[interventionCount];
                             int listIndex = 0;
-                            for (var i = 0; i < interventionDarkList.Count; i++)
+                            for (var i = 0; i < settings.interventionDarkList.Count; i++)
                             {
-                                illuminances[listIndex] = interventionDarkList[i];
+                                illuminances[listIndex] = settings.interventionDarkList[i];
                                 lightThemes[listIndex] = false;
-                                weights[listIndex] = (i + 1.0 + maxInterventionCount - interventionDarkList.Count) / maxInterventionCount;
+                                weights[listIndex] = (i + 1.0 + maxInterventionCount - settings.interventionDarkList.Count) / maxInterventionCount;
                                 listIndex++;
                             }
-                            for (var i = 0; i < interventionLightList.Count; i++)
+                            for (var i = 0; i < settings.interventionLightList.Count; i++)
                             {
-                                illuminances[listIndex] = interventionLightList[i];
+                                illuminances[listIndex] = settings.interventionLightList[i];
                                 lightThemes[listIndex] = true;
-                                weights[listIndex] = (i + 1.0 + maxInterventionCount - interventionLightList.Count) / maxInterventionCount;
+                                weights[listIndex] = (i + 1.0 + maxInterventionCount - settings.interventionLightList.Count) / maxInterventionCount;
                                 listIndex++;
                             }
                             predictionModel.Train(illuminances, lightThemes, weights);
                             var prediction = predictionModel.Predict(Math.Log(currentIlluminance));
                             if (prediction.result == useLightTheme)
                             {
-                                SaveSettings();
+                                settings.SaveSettings(predictionModel.b, predictionModel.w, trayIcon.AutoSwitchEnabled);
                                 break;
                             }
                         }
@@ -161,7 +94,7 @@ namespace BrightnessSwitch
             lightControl.OnThemeSwitch += (object? sender, bool useLightTheme) => trayIcon.SetTheme(useLightTheme);
 
             Application.Run();
-            SaveSettings();
+            settings.SaveSettings(predictionModel.b, predictionModel.w, trayIcon.AutoSwitchEnabled);
         }
     }
 }

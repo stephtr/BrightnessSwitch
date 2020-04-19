@@ -1,8 +1,6 @@
 using System;
-using Microsoft.Win32;
 using Windows.Devices.Sensors;
 using Windows.Foundation;
-using Windows.UI.ViewManagement;
 
 namespace BrightnessSwitch
 {
@@ -17,18 +15,19 @@ namespace BrightnessSwitch
         public TimeSpan MinimumThemeChangeDuration = TimeSpan.FromSeconds(60);
         public event PredictionCallback? PredictionCallback;
         public event EventHandler<bool>? OnThemeSwitch;
+        public readonly bool LightSensorAvailable;
 
         public LightControl(uint sensorInterval = 10_000, float illuminanceThreshold = 5000)
         {
             IlluminanceThreshold = illuminanceThreshold;
 
             Sensor = LightSensor.GetDefault();
-            if (Sensor == null)
+            LightSensorAvailable = Sensor != null;
+            if (Sensor != null)
             {
-                throw new NotSupportedException("No light sensor present");
+                Sensor.ReportInterval = Math.Max(Sensor.MinimumReportInterval, sensorInterval);
+                Sensor.ReadingChanged += new TypedEventHandler<LightSensor, LightSensorReadingChangedEventArgs>(LightReadingChanged);
             }
-            Sensor.ReportInterval = Math.Max(Sensor.MinimumReportInterval, sensorInterval);
-            Sensor.ReadingChanged += new TypedEventHandler<LightSensor, LightSensorReadingChangedEventArgs>(LightReadingChanged);
 
             LightThemeEnabled = ThemeUtils.IsLightTheme();
         }
