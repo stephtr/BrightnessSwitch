@@ -9,6 +9,7 @@ _Do you have a notebook with Fn and function keys combined and have issues with 
 This small app automatically switches between Light- and Dark-Theme, depending on the illuminance detected via your device's light sensor.
 
 ![Screenshot](screenshot.png)
+_Screenshot of the app_
 
 In order to control the switching mechanism, it adds a tray icon where one can enable or disable automatic switching of themes, but also an option to manually switch the theme.
 
@@ -31,6 +32,11 @@ For this app there is currently no installer available, therefore just download 
 For building the app from scratch, you need to have the [.NET SDK 5.0 (preview)](https://dotnet.microsoft.com/download/dotnet/5.0) installed.
 
 After cloning or downloading the source, running `dotnet run` is sufficient for automatically restoring, building and running the app.
+
+Included with the source is also a small Python script for analysing the app's SVM configuration. By running `analysis.py`, it shows a plot containing all your recent manual interventions as dots. The vertical line corresponds to the criteria for switching between light and dark theme with the shaded area being a measure for the uncertainty.
+
+![Screenshot analysis](screenshot_analysis.png)
+_Screenshot of the analysis tool_
 
 ## Changelog
 

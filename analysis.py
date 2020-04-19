@@ -31,9 +31,11 @@ else:
     plt.figure(figsize=(6, 2))
 
     plt.plot([np.exp(b)] * 2, [-1, 1], 'k')
-    rect = patches.Rectangle((np.exp(b - 1 / w), -1), np.exp(b + 1 / w) -
-                             np.exp(b - 1 / w), 2, facecolor='k', alpha=0.1)
-    plt.gca().add_patch(rect)
+    # the decision criteria for the app is that a prediction ends up outside +-w / 2
+    plt.gca().add_patch(patches.Rectangle(
+        (np.exp(b), -1), np.exp(b - 1 / w / 2) - np.exp(b), 2, facecolor='k', alpha=0.15))
+    plt.gca().add_patch(patches.Rectangle(
+        (np.exp(b), -1), np.exp(b + 1 / w / 2) - np.exp(b), 2, facecolor='y', alpha=0.15))
 
     plt.scatter(darkList, (np.random.random(nDark) - 0.5) * 0.4,
                 [entry * 100 for entry in darkWeights], 'k', alpha=0.25, linewidths=0)
@@ -44,4 +46,5 @@ else:
     plt.xlabel('Illuminance (lux)')
     plt.ylim(-1, 1)
     plt.gca().axes.get_yaxis().set_ticks([])
+    plt.tight_layout()
     plt.show()
