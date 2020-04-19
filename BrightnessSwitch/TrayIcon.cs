@@ -10,7 +10,6 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.Win32;
-using Windows.UI.ViewManagement;
 
 namespace BrightnessSwitch
 {
@@ -39,7 +38,6 @@ namespace BrightnessSwitch
                 LightIcon = new Icon(stream);
 
             trayIcon = new NotifyIcon();
-            trayIcon.Icon = DarkIcon;
             trayIcon.Visible = true;
             trayIcon.Text = "Switch Theme brightness";
             var contextMenu = trayIcon.ContextMenuStrip = new ContextMenuStrip();
@@ -96,6 +94,8 @@ namespace BrightnessSwitch
                     e.Cancel = true;
                 }
             };
+
+            SetTheme(ThemeUtils.IsLightTheme());
         }
 
         ~TrayIcon()
@@ -105,8 +105,7 @@ namespace BrightnessSwitch
 
         public void UpdateContextMenu()
         {
-            var uiSettings = new UISettings();
-            var lightThemeEnabled = uiSettings.GetColorValue(UIColorType.Background).ToString() == "#FFFFFFFF";
+            var lightThemeEnabled = ThemeUtils.IsLightTheme();
             switchItem.Text = $"Switch to {(lightThemeEnabled ? "dark" : "light")} theme{(AutoSwitchEnabled ? " (and learn)" : "")}";
             SwitchToLightMode = !lightThemeEnabled;
         }
@@ -139,7 +138,7 @@ namespace BrightnessSwitch
         private async void CheckUpdates(bool showOptionalMessages = true)
         {
             const string updateUrl = "https://api.github.com/repos/stephtr/BrightnessSwitch/releases/latest";
-            
+
             Version currentVersion = Assembly.GetExecutingAssembly().GetName().Version!;
             using var wc = new WebClient();
             wc.Headers.Add("User-Agent", "BrightnessSwitch");

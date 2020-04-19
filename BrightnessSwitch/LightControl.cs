@@ -15,7 +15,6 @@ namespace BrightnessSwitch
         public float IlluminanceThreshold;
         private DateTime LastAutomaticThemeChange = DateTime.MinValue;
         public TimeSpan MinimumThemeChangeDuration = TimeSpan.FromSeconds(60);
-        private RegistryKey PersonalizationRegKey;
         public event PredictionCallback? PredictionCallback;
         public event EventHandler<bool>? OnThemeSwitch;
 
@@ -31,11 +30,7 @@ namespace BrightnessSwitch
             Sensor.ReportInterval = Math.Max(Sensor.MinimumReportInterval, sensorInterval);
             Sensor.ReadingChanged += new TypedEventHandler<LightSensor, LightSensorReadingChangedEventArgs>(LightReadingChanged);
 
-            var uiSettings = new UISettings();
-            LightThemeEnabled = uiSettings.GetColorValue(UIColorType.Background).ToString() == "#FFFFFFFF";
-
-            PersonalizationRegKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize", true)
-                ?? throw new Exception("A required registry key can't be accessed.");
+            LightThemeEnabled = ThemeUtils.IsLightTheme();
         }
 
         public float GetCurrentIlluminance()
@@ -78,8 +73,7 @@ namespace BrightnessSwitch
         public void SetTheme(bool useLightTheme)
         {
             LightThemeEnabled = useLightTheme;
-            PersonalizationRegKey.SetValue("AppsUseLightTheme", useLightTheme, RegistryValueKind.DWord);
-            PersonalizationRegKey.SetValue("SystemUsesLightTheme", useLightTheme, RegistryValueKind.DWord);
+            ThemeUtils.SetTheme(useLightTheme);
             if (OnThemeSwitch != null)
             {
                 OnThemeSwitch(this, useLightTheme);
