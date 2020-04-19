@@ -8,9 +8,9 @@
   IgnorableNamespaces="uap rescap">
 
   <Identity
-    Name="StephanTroyer.BrightnessSwitch"
-    Publisher="CN=Stephan Troyer"
-    Version="1.0.1.0" />
+    Name="2595StephanTroyer.BrightnessSwitch"
+    Publisher="CN=5E1C7B43-8F35-4F79-B41B-3E55190119C0"
+    Version="1.1.0.0" />
 
   <Properties>
     <DisplayName>BrightnessSwitch</DisplayName>
@@ -43,7 +43,7 @@
       <Extensions>
         <desktop:Extension
           Category="windows.startupTask"
-          Executable="BrightnessSwitch.exe"
+          Executable="BrightnessSwitch\BrightnessSwitch.exe"
           EntryPoint="Windows.FullTrustApplication">
           <desktop:StartupTask
             TaskId="BrightnessSwitch"
