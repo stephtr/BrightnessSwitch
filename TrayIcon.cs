@@ -48,7 +48,13 @@ namespace BrightnessSwitch
 
             trayIcon.Click += (object? sender, EventArgs e) => trayIcon.ContextMenuStrip.Show();
             trayIcon.ContextMenuStrip.Opening += (object? sender, CancelEventArgs e) => UpdateContextMenu();
-            trayIcon.ContextMenuStrip.AutoClose = false;
+            trayIcon.ContextMenuStrip.Closing += (object? sender, ToolStripDropDownClosingEventArgs e) =>
+            {
+                if (e.CloseReason == ToolStripDropDownCloseReason.ItemClicked)
+                {
+                    e.Cancel = true;
+                }
+            };
         }
 
         public void UpdateContextMenu()
