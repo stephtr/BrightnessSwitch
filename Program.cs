@@ -15,11 +15,14 @@ namespace BrightnessSwitch
 
         static List<double> interventionDarkList = new List<double>();
         static List<double> interventionLightList = new List<double>();
+        static int maxInterventionCount = 100;
         static SupportVectorMachine predictionModel = new SupportVectorMachine();
 
         public static void LoadSettings()
         {
             float defaultIlluminanceThreshold = 5000; // Lux
+            interventionDarkList.Clear();
+            interventionLightList.Clear();
 
             try
             {
@@ -94,10 +97,18 @@ namespace BrightnessSwitch
                         if (useLightTheme)
                         {
                             interventionLightList.Add(Math.Log(currentIlluminance));
+                            while (interventionLightList.Count > maxInterventionCount)
+                            {
+                                interventionLightList.RemoveAt(0);
+                            }
                         }
                         else
                         {
                             interventionDarkList.Add(Math.Log(currentIlluminance));
+                            while (interventionDarkList.Count > maxInterventionCount)
+                            {
+                                interventionDarkList.RemoveAt(0);
+                            }
                         }
                         if (interventionDarkList.Count < 1 || interventionLightList.Count < 1)
                         {
