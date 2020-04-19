@@ -11,8 +11,10 @@ namespace BrightnessSwitch
     public class LightControl
     {
         private LightSensor Sensor;
-        private bool? LightThemeEnabled = null;
+        private bool LightThemeEnabled;
         public float IlluminanceThreshold;
+        private DateTime LastAutomaticThemeChange = DateTime.MinValue;
+        public TimeSpan MinimumThemeChangeDuration = TimeSpan.FromSeconds(60);
         private RegistryKey PersonalizationRegKey;
         public event PredictionCallback? PredictionCallback;
         public event EventHandler<bool>? OnThemeSwitch;
@@ -39,7 +41,7 @@ namespace BrightnessSwitch
 
         private void LightReadingChanged(LightSensor sensor, LightSensorReadingChangedEventArgs sensorEvent)
         {
-            if (sensorEvent.Reading == null)
+            if (sensorEvent.Reading == null || DateTime.UtcNow - LastAutomaticThemeChange < MinimumThemeChangeDuration)
             {
                 return;
             }
@@ -63,13 +65,15 @@ namespace BrightnessSwitch
 
             if (useLightTheme != null && LightThemeEnabled != useLightTheme)
             {
+                LastAutomaticThemeChange = DateTime.UtcNow;
                 LightThemeEnabled = useLightTheme.Value;
-                SetTheme(useLightTheme.Value);
+                SetTheme(LightThemeEnabled);
             }
         }
 
         public void SetTheme(bool useLightTheme)
         {
+            LightThemeEnabled = useLightTheme;
             PersonalizationRegKey.SetValue("AppsUseLightTheme", useLightTheme, RegistryValueKind.DWord);
             PersonalizationRegKey.SetValue("SystemUsesLightTheme", useLightTheme, RegistryValueKind.DWord);
             if (OnThemeSwitch != null)
