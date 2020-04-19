@@ -5,6 +5,7 @@
     <TargetFramework>netcoreapp5.0</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationIcon>sun.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,9 +14,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="*.ico">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <EmbeddedResource Include="sun_dark.ico">
+      <LogicalName>BrightnessSwitch.Resources.IconSunDark</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="sun_light.ico">
+      <LogicalName>BrightnessSwitch.Resources.IconSunLight</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>

@@ -16,13 +16,22 @@ namespace BrightnessSwitch
         private ToolStripItem switchItem;
         public event EventHandler<int>? OnExit;
         public event EventHandler<bool>? OnThemeSwitch;
-        private Icon DarkIcon = new Icon("sun_dark.ico");
-        private Icon LightIcon = new Icon("sun_light.ico");
+        private Icon DarkIcon;
+        private Icon LightIcon;
         public bool AutoSwitchEnabled { get; private set; } = true;
         private bool SwitchToLightMode;
 
+        private const string autorunKey = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run";
+        private const string autorunValue = "BrightnessSwitch";
+
         public TrayIcon()
         {
+            var assembly = Assembly.GetExecutingAssembly();
+            using (var stream = assembly.GetManifestResourceStream("BrightnessSwitch.Resources.IconSunDark"))
+                DarkIcon = new Icon(stream);
+            using (var stream = assembly.GetManifestResourceStream("BrightnessSwitch.Resources.IconSunLight"))
+                LightIcon = new Icon(stream);
+
             trayIcon = new NotifyIcon();
             trayIcon.Icon = DarkIcon;
             trayIcon.Visible = true;
@@ -90,20 +99,20 @@ namespace BrightnessSwitch
 
         private bool GetAutorun()
         {
-            var arKey = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run")!;
-            return (string?)arKey.GetValue("BrightnessSwitch") == Application.ExecutablePath.ToString();
+            var arKey = Registry.CurrentUser.OpenSubKey(autorunKey)!;
+            return (string?)arKey.GetValue(autorunValue) == Application.ExecutablePath.ToString();
         }
 
         private void SetAutorun(bool activate)
         {
-            var arKey = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true)!;
+            var arKey = Registry.CurrentUser.OpenSubKey(autorunKey, true)!;
             if (activate)
             {
-                arKey.SetValue("BrightnessSwitch", Application.ExecutablePath.ToString());
+                arKey.SetValue(autorunValue, Application.ExecutablePath.ToString());
             }
             else
             {
-                arKey.DeleteValue("BrightnessSwitch");
+                arKey.DeleteValue(autorunValue);
             }
         }
 
