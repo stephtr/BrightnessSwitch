@@ -67,7 +67,7 @@ namespace BrightnessSwitch
                 if (OnThemeSwitch != null) OnThemeSwitch(this, SwitchToLightMode);
             });
 
-            if (autoSwitchEnabled)
+            if (autoModeAvailable)
             {
                 autoSwitchItem = new ToolStripMenuItem("Auto switch theme");
                 autoSwitchItem.Checked = autoSwitchEnabled && AutoSwitchEnabled;
