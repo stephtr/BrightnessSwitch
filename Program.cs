@@ -123,14 +123,14 @@ namespace BrightnessSwitch
                         {
                             illuminances[listIndex] = interventionDarkList[i];
                             lightThemes[listIndex] = false;
-                            weights[listIndex] = (i + 1) / (double)interventionDarkList.Count;
+                            weights[listIndex] = (i + 1.0 + maxInterventionCount - interventionDarkList.Count) / maxInterventionCount;
                             listIndex++;
                         }
                         for (var i = 0; i < interventionLightList.Count; i++)
                         {
                             illuminances[listIndex] = interventionLightList[i];
                             lightThemes[listIndex] = true;
-                            weights[listIndex] = (i + 1) / (double)interventionLightList.Count;
+                            weights[listIndex] = (i + 1.0 + maxInterventionCount - interventionLightList.Count) / maxInterventionCount;
                             listIndex++;
                         }
                         predictionModel.Train(illuminances, lightThemes, weights);

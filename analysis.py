@@ -23,10 +23,10 @@ else:
     lightWeights = []
     for i in range(nDark):
         darkList.append(np.exp(struct.unpack('d', file.read(8))[0]))
-        darkWeights.append((i + 1.0) / nDark)
+        darkWeights.append(0.2 + (i + 1) / nDark)
     for i in range(nLight):
         lightList.append(np.exp(struct.unpack('d', file.read(8))[0]))
-        lightWeights.append((i + 1) / nLight)
+        lightWeights.append(0.2 + (i + 1) / nLight)
 
     plt.figure(figsize=(6, 2))
 
