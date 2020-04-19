@@ -6,7 +6,7 @@ _Do you have a notebook with Fn and function keys combined and have issues with 
 
 ---
 
-This small app automatically switches between Light- and Dark-Theme, depending on the illuminance detected via your device's light sensor.
+This small app automatically switches between Windows' Light- and Dark-Theme, depending on the ambient brightness, detected via your device's light sensor.
 
 ![Screenshot](screenshot.png)<br />
 _Screenshot of the app_
@@ -26,6 +26,10 @@ If automatic switching is enabled and one switches the theme, machine learning (
 The app is written in C# (.NET 5.0) and therefore needs the [Desktop Runtime 5.0](https://dotnet.microsoft.com/download/dotnet/5.0#runtime-desktop-5.0.0-preview.2) to be installed.
 
 For this app there is currently no installer available, therefore just download the [latest release](https://github.com/stephtr/BrightnessSwitch/releases) and extract it to a folder of your choice. Then run `BrightnessControl.exe`, autostart with Windows can be enabled via the context menu.
+
+## Privacy
+
+The app itself doesn't send any data to any server. For the Microsoft Store version, Windows may send some diagnostic informations to Microsoft.
 
 ## Building from source
 

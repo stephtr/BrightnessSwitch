@@ -6,11 +6,19 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>sun.ico</ApplicationIcon>
-    <Version>1.0.1</Version>
+    <Version>1.1.0</Version>
+    <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
+    <Configurations>Debug;Release;Store</Configurations>
+    <Platforms>AnyCPU;x64;x86</Platforms>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
     <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Store'">
+    <Optimize>true</Optimize>
+    <DefineConstants>TRACE;STORE</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,6 +1,6 @@
 # Changelog
 
-## unreleased
+## 1.1.0
 
 - Save whether the automatic mode is enabled or not
 - On devices without light sensor the app now starts and runs in manual mode only.
