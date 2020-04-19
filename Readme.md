@@ -2,6 +2,10 @@
 
 [![Total downloads](https://img.shields.io/github/downloads/stephtr/BrightnessSwitch/total.svg)](https://github.com/stephtr/BrightnessSwitch/releases) _- hopefully increasing soon 😉_
 
+_Do you have a notebook with Fn and function keys combined and have issues with combinations like <kbd>Alt</kbd>+<kbd>F4</kbd>? Make sure to check out [FixSurfaceKeyboard](https://github.com/stephtr/FixSurfaceKeyboard)._
+
+---
+
 This small app automatically switches between Light- and Dark-Theme, depending on the illuminance detected via your device's light sensor.
 
 ![Screenshot](screenshot.png)
