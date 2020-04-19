@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.Drawing;
+using System.Reflection;
 using System.Windows.Forms;
 using Windows.UI.ViewManagement;
 
@@ -46,7 +47,11 @@ namespace BrightnessSwitch
                 if (OnExit != null) OnExit(this, 0);
             });
 
-            trayIcon.Click += (object? sender, EventArgs e) => trayIcon.ContextMenuStrip.Show();
+            trayIcon.Click += (object? sender, EventArgs e) =>
+            {
+                var mi = typeof(NotifyIcon).GetMethod("ShowContextMenu", BindingFlags.Instance | BindingFlags.NonPublic);
+                mi!.Invoke(trayIcon, null);
+            };
             trayIcon.ContextMenuStrip.Opening += (object? sender, CancelEventArgs e) => UpdateContextMenu();
             trayIcon.ContextMenuStrip.Closing += (object? sender, ToolStripDropDownClosingEventArgs e) =>
             {
