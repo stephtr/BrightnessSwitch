@@ -89,56 +89,59 @@ namespace BrightnessSwitch
             trayIcon.OnExit += (object? sender, int reason) => Application.Exit();
             trayIcon.OnThemeSwitch += (object? sender, bool useLightTheme) =>
             {
-                var currentIlluminance = lightControl.GetCurrentIlluminance();
-                if (currentIlluminance > 0)
+                if (trayIcon.AutoSwitchEnabled) // Otherwise we don't have to learn it
                 {
-                    for (var additionRun = 0; additionRun < 10; additionRun++)
+                    var currentIlluminance = lightControl.GetCurrentIlluminance();
+                    if (currentIlluminance > 0)
                     {
-                        if (useLightTheme)
+                        for (var additionRun = 0; additionRun < 10; additionRun++)
                         {
-                            interventionLightList.Add(Math.Log(currentIlluminance));
-                            while (interventionLightList.Count > maxInterventionCount)
+                            if (useLightTheme)
                             {
-                                interventionLightList.RemoveAt(0);
+                                interventionLightList.Add(Math.Log(currentIlluminance));
+                                while (interventionLightList.Count > maxInterventionCount)
+                                {
+                                    interventionLightList.RemoveAt(0);
+                                }
                             }
-                        }
-                        else
-                        {
-                            interventionDarkList.Add(Math.Log(currentIlluminance));
-                            while (interventionDarkList.Count > maxInterventionCount)
+                            else
                             {
-                                interventionDarkList.RemoveAt(0);
+                                interventionDarkList.Add(Math.Log(currentIlluminance));
+                                while (interventionDarkList.Count > maxInterventionCount)
+                                {
+                                    interventionDarkList.RemoveAt(0);
+                                }
                             }
-                        }
-                        if (interventionDarkList.Count < 1 || interventionLightList.Count < 1)
-                        {
-                            break;
-                        }
-                        var interventionCount = interventionDarkList.Count + interventionLightList.Count;
-                        var illuminances = new double[interventionCount];
-                        var lightThemes = new bool[interventionCount];
-                        var weights = new double[interventionCount];
-                        int listIndex = 0;
-                        for (var i = 0; i < interventionDarkList.Count; i++)
-                        {
-                            illuminances[listIndex] = interventionDarkList[i];
-                            lightThemes[listIndex] = false;
-                            weights[listIndex] = (i + 1.0 + maxInterventionCount - interventionDarkList.Count) / maxInterventionCount;
-                            listIndex++;
-                        }
-                        for (var i = 0; i < interventionLightList.Count; i++)
-                        {
-                            illuminances[listIndex] = interventionLightList[i];
-                            lightThemes[listIndex] = true;
-                            weights[listIndex] = (i + 1.0 + maxInterventionCount - interventionLightList.Count) / maxInterventionCount;
-                            listIndex++;
-                        }
-                        predictionModel.Train(illuminances, lightThemes, weights);
-                        var prediction = predictionModel.Predict(Math.Log(currentIlluminance));
-                        if (prediction.result == useLightTheme)
-                        {
-                            SaveSettings();
-                            break;
+                            if (interventionDarkList.Count < 1 || interventionLightList.Count < 1)
+                            {
+                                break;
+                            }
+                            var interventionCount = interventionDarkList.Count + interventionLightList.Count;
+                            var illuminances = new double[interventionCount];
+                            var lightThemes = new bool[interventionCount];
+                            var weights = new double[interventionCount];
+                            int listIndex = 0;
+                            for (var i = 0; i < interventionDarkList.Count; i++)
+                            {
+                                illuminances[listIndex] = interventionDarkList[i];
+                                lightThemes[listIndex] = false;
+                                weights[listIndex] = (i + 1.0 + maxInterventionCount - interventionDarkList.Count) / maxInterventionCount;
+                                listIndex++;
+                            }
+                            for (var i = 0; i < interventionLightList.Count; i++)
+                            {
+                                illuminances[listIndex] = interventionLightList[i];
+                                lightThemes[listIndex] = true;
+                                weights[listIndex] = (i + 1.0 + maxInterventionCount - interventionLightList.Count) / maxInterventionCount;
+                                listIndex++;
+                            }
+                            predictionModel.Train(illuminances, lightThemes, weights);
+                            var prediction = predictionModel.Predict(Math.Log(currentIlluminance));
+                            if (prediction.result == useLightTheme)
+                            {
+                                SaveSettings();
+                                break;
+                            }
                         }
                     }
                 }
