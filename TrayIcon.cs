@@ -1,7 +1,11 @@
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
+using System.Net;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.Win32;
 using Windows.UI.ViewManagement;
@@ -23,6 +27,7 @@ namespace BrightnessSwitch
 
         private const string autorunKey = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run";
         private const string autorunValue = "BrightnessSwitch";
+        private const string updateUrl = "https://api.github.com/repos/stephtr/BrightnessSwitch/releases/latest";
 
         public TrayIcon()
         {
@@ -37,6 +42,26 @@ namespace BrightnessSwitch
             trayIcon.Visible = true;
             trayIcon.Text = "Switch Theme brightness";
             var contextMenu = trayIcon.ContextMenuStrip = new ContextMenuStrip();
+
+            contextMenu.Items.Add("Exit", null, (object? sender, EventArgs args) =>
+            {
+                contextMenu.Close();
+                if (OnExit != null) OnExit(this, 0);
+            });
+
+            contextMenu.Items.Add("Check for updates", null, (object? sender, EventArgs args) =>
+            {
+                contextMenu.Close();
+                CheckUpdates();
+            });
+
+            autorunItem = new ToolStripMenuItem("Autostart with Windows");
+            autorunItem.Checked = GetAutorun();
+            autorunItem.CheckedChanged += (object? sender, EventArgs e) => SetAutorun(autorunItem.Checked);
+            autorunItem.CheckOnClick = true;
+            contextMenu.Items.Add(autorunItem);
+
+            contextMenu.Items.Add("-");
 
             switchItem = contextMenu.Items.Add("Switch theme", null, (object? sender, EventArgs args) =>
             {
@@ -54,20 +79,6 @@ namespace BrightnessSwitch
             };
             contextMenu.Items.Add(autoSwitchItem);
 
-            contextMenu.Items.Add("-");
-
-            autorunItem = new ToolStripMenuItem("Autostart with Windows");
-            autorunItem.Checked = GetAutorun();
-            autorunItem.CheckedChanged += (object? sender, EventArgs e) => SetAutorun(autorunItem.Checked);
-            autorunItem.CheckOnClick = true;
-            contextMenu.Items.Add(autorunItem);
-
-            contextMenu.Items.Add("Exit", null, (object? sender, EventArgs args) =>
-            {
-                contextMenu.Close();
-                if (OnExit != null) OnExit(this, 0);
-            });
-
             trayIcon.Click += (object? sender, EventArgs e) =>
             {
                 // taken from https://stackoverflow.com/a/2208910
@@ -82,6 +93,11 @@ namespace BrightnessSwitch
                     e.Cancel = true;
                 }
             };
+        }
+
+        ~TrayIcon()
+        {
+            trayIcon.Visible = false;
         }
 
         public void UpdateContextMenu()
@@ -116,9 +132,38 @@ namespace BrightnessSwitch
             }
         }
 
-        ~TrayIcon()
+        private async void CheckUpdates(bool showErrors = true)
         {
-            trayIcon.Visible = false;
+            Version currentVersion = Assembly.GetExecutingAssembly().GetName().Version!;
+            using var wc = new WebClient();
+            wc.Headers.Add("User-Agent", "BrightnessSwitch");
+            try
+            {
+                var data = await wc.DownloadStringTaskAsync(updateUrl);
+                var tagMatch = new Regex("\"tag_name\"[^\"]+\"([^\"]+)\"").Match(data);
+                var urlMatch = new Regex("\"html_url\"[^\"]+\"(https://github.com/[^\"]+)\"").Match(data);
+                var newVersion = new Version(tagMatch.Groups[1].Value);
+                var releaseUrl = urlMatch.Groups[1].Value;
+                if (currentVersion < newVersion)
+                {
+                    if (MessageBox.Show("There is a new version available. Do you want to go to the download page?", "Updating BrightnessSwitch", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    {
+                        var psi = new ProcessStartInfo
+                        {
+                            FileName = releaseUrl,
+                            UseShellExecute = true
+                        };
+                        Process.Start(psi);
+                    }
+                }
+            }
+            catch
+            {
+                if (showErrors)
+                {
+                    MessageBox.Show("Error downloading the update information", "Updating BrightnessSwitch");
+                }
+            }
         }
     }
 }
