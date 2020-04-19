@@ -132,7 +132,7 @@ namespace BrightnessSwitch
             }
         }
 
-        private async void CheckUpdates(bool showErrors = true)
+        private async void CheckUpdates(bool showOptionalMessages = true)
         {
             Version currentVersion = Assembly.GetExecutingAssembly().GetName().Version!;
             using var wc = new WebClient();
@@ -156,10 +156,14 @@ namespace BrightnessSwitch
                         Process.Start(psi);
                     }
                 }
+                else if (showOptionalMessages)
+                {
+                    MessageBox.Show("You are already using the latest version.", "Updating BrightnessSwitch");
+                }
             }
             catch
             {
-                if (showErrors)
+                if (showOptionalMessages)
                 {
                     MessageBox.Show("Error downloading the update information", "Updating BrightnessSwitch");
                 }
