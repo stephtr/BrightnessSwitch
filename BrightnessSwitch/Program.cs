@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace BrightnessSwitch
@@ -8,10 +9,15 @@ namespace BrightnessSwitch
         static int maxInterventionCount = 100;
         static SupportVectorMachine predictionModel = new SupportVectorMachine();
 
-
+        static Mutex mutex = new Mutex(true, "{22C62CE3-AEA8-4639-9919-F5F426795B26}");
         [STAThread]
         static void Main(string[] args)
         {
+            if (!mutex.WaitOne(TimeSpan.Zero, true))
+            {
+                return;
+            }
+
             var settings = new Settings();
             var currentSettings = settings.LoadSettings();
             predictionModel.b = currentSettings.predictionB;
@@ -95,6 +101,7 @@ namespace BrightnessSwitch
 
             Application.Run();
             settings.SaveSettings(predictionModel.b, predictionModel.w, trayIcon.AutoSwitchEnabled);
+            mutex.ReleaseMutex();
         }
     }
 }
