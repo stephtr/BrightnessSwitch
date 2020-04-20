@@ -27,7 +27,7 @@ namespace BrightnessSwitch
 
         public TrayIcon(bool autoSwitchEnabled = true, bool autoModeAvailable = true)
         {
-            AutoSwitchEnabled = autoSwitchEnabled;
+            AutoSwitchEnabled = autoModeAvailable && autoSwitchEnabled;
 
             var assembly = Assembly.GetExecutingAssembly();
             using (var stream = assembly.GetManifestResourceStream("BrightnessSwitch.Resources.IconSunDark"))
@@ -42,6 +42,7 @@ namespace BrightnessSwitch
             contextMenu.Items.Add("Exit", null, (object? sender, EventArgs args) =>
             {
                 contextMenu.Close();
+                trayIcon.Visible = false;
                 if (OnExit != null) OnExit(this, 0);
             });
 
