@@ -17,7 +17,7 @@ namespace BrightnessSwitch
 
         // This procedure optimizes the following cost function:
         // C = lambda / 2 * w**2 + 1 / (N * sum_i weights[i]) * sum_i (weights[i] * max(0, 1 - y_i * w * (x_i - b)))
-        public void Train(double[] values, bool[] group, double[]? weights = null, int maxIter = 200, double eps = 1e-3)
+        public void Train(double[] values, bool[] group, double[]? weights = null, int maxIter = 200, double eps = 1e-4)
         {
             if (values.Length != group.Length || (weights != null && values.Length != weights.Length))
             {
@@ -35,6 +35,7 @@ namespace BrightnessSwitch
                 double eta = 1 / (lambda * (t + 3));
                 double w_new = w * (1 - lambda * eta);
                 double b_new = b;
+                cost = 0;
                 for (uint i = 0; i < values.Length; i++)
                 {
                     var x = values[i];
