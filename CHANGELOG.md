@@ -1,5 +1,10 @@
 # Changelog
 
+## unreleased
+
+- Fix bug on devices without light sensor
+- Optimized machine learning model
+
 ## 1.1.0
 
 - Save whether the automatic mode is enabled or not
