@@ -57,8 +57,6 @@ namespace BrightnessSwitch
             }
             catch
             {
-                interventionDarkList.Add(Math.Log(defaultIlluminanceThreshold) * 0.9);
-                interventionLightList.Add(Math.Log(defaultIlluminanceThreshold) * 1.1);
                 return (Math.Log(defaultIlluminanceThreshold), Math.Log(defaultIlluminanceThreshold) * 0.1, true);
             }
         }

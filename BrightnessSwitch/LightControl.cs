@@ -1,4 +1,5 @@
 using System;
+using System.Windows.Forms;
 using Windows.Devices.Sensors;
 using Windows.Foundation;
 
@@ -8,7 +9,7 @@ namespace BrightnessSwitch
 
     public class LightControl
     {
-        private LightSensor Sensor;
+        private LightSensor? Sensor;
         private bool LightThemeEnabled;
         public float IlluminanceThreshold;
         private DateTime LastAutomaticThemeChange = DateTime.MinValue;
@@ -34,12 +35,16 @@ namespace BrightnessSwitch
 
         public float GetCurrentIlluminance()
         {
-            return Sensor.GetCurrentReading()?.IlluminanceInLux ?? 0;
+            return Sensor?.GetCurrentReading()?.IlluminanceInLux ?? 0;
         }
 
         private void LightReadingChanged(LightSensor sensor, LightSensorReadingChangedEventArgs sensorEvent)
         {
+#if DEBUG
+            if (sensorEvent.Reading == null)
+#else
             if (sensorEvent.Reading == null || DateTime.UtcNow - LastAutomaticThemeChange < MinimumThemeChangeDuration)
+#endif
             {
                 return;
             }
@@ -64,19 +69,25 @@ namespace BrightnessSwitch
             if (useLightTheme != null && LightThemeEnabled != useLightTheme)
             {
                 LastAutomaticThemeChange = DateTime.UtcNow;
-                LightThemeEnabled = useLightTheme.Value;
-                SetTheme(LightThemeEnabled);
+                if (SetTheme(useLightTheme.Value))
+                {
+                    LightThemeEnabled = useLightTheme.Value;
+                }
             }
         }
 
-        public void SetTheme(bool useLightTheme)
+        public bool SetTheme(bool useLightTheme)
         {
+            if (!ThemeUtils.SetTheme(useLightTheme))
+            {
+                return false;
+            }
             LightThemeEnabled = useLightTheme;
-            ThemeUtils.SetTheme(useLightTheme);
             if (OnThemeSwitch != null)
             {
                 OnThemeSwitch(this, useLightTheme);
             }
+            return true;
         }
     }
 }

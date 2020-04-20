@@ -11,7 +11,7 @@ namespace BrightnessSwitch
             return uiSettings.GetColorValue(UIColorType.Background).ToString() == "#FFFFFFFF";
         }
 
-        public static void SetTheme(bool useLightTheme)
+        public static bool SetTheme(bool useLightTheme)
         {
             try
             {
@@ -25,7 +25,29 @@ namespace BrightnessSwitch
                 psi.Arguments = @"ADD HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize /v SystemUsesLightTheme /t REG_DWORD /d " + (useLightTheme ? "1" : "0") + " /f";
                 Process.Start(psi);
             }
-            catch { }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public static bool TestThemeAccess()
+        {
+            try
+            {
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "reg",
+                    CreateNoWindow = true,
+                };
+                Process.Start(psi);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
         }
     }
 }

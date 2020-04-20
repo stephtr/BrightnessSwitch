@@ -6,13 +6,19 @@ namespace BrightnessSwitch
 {
     class Program
     {
-        static int maxInterventionCount = 100;
+        static int maxInterventionCount = 50;
         static SupportVectorMachine predictionModel = new SupportVectorMachine();
 
         static Mutex mutex = new Mutex(true, "{22C62CE3-AEA8-4639-9919-F5F426795B26}");
         [STAThread]
         static void Main(string[] args)
         {
+            if (!ThemeUtils.TestThemeAccess())
+            {
+                MessageBox.Show("This app unfortunately can't run on your PC.\nIt doesn't support Windows 10 in S mode.", "BrightnessSwitch", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
             if (!mutex.WaitOne(TimeSpan.Zero, true))
             {
                 return;
@@ -33,7 +39,7 @@ namespace BrightnessSwitch
                     return null;
                 }
                 var (prediction, certainty) = predictionModel.Predict(Math.Log(illuminanceInLux));
-                return certainty > 0.5 ? (bool?)prediction : null;
+                return certainty > 0.3 ? (bool?)prediction : null;
             };
             trayIcon.OnExit += (object? sender, int reason) => Application.Exit();
             trayIcon.OnThemeSwitch += (object? sender, bool useLightTheme) =>
@@ -43,28 +49,44 @@ namespace BrightnessSwitch
                     var currentIlluminance = lightControl.GetCurrentIlluminance();
                     if (currentIlluminance > 0)
                     {
-                        for (var additionRun = 0; additionRun < 10; additionRun++)
+                        var illuminanceLog = Math.Log(currentIlluminance);
+
+                        var positiveList = useLightTheme ? settings.interventionLightList : settings.interventionDarkList;
+                        var negativeList = useLightTheme ? settings.interventionDarkList : settings.interventionLightList;
+
+                        // If it's the first time the learn feature is being used,
+                        // use the chance to set reasonable default values.
+                        if (negativeList.Count == 0)
                         {
-                            if (useLightTheme)
+                            negativeList.Add(illuminanceLog * (useLightTheme ? 0.8 : 1.2));
+                            predictionModel.b = illuminanceLog;
+                        }
+
+                        var maxIterations = 20;
+                        for (var iteration = 0; iteration <= maxIterations; iteration++)
+                        {
+                            positiveList.Add(illuminanceLog);
+                            while (positiveList.Count > maxInterventionCount)
                             {
-                                settings.interventionLightList.Add(Math.Log(currentIlluminance));
-                                while (settings.interventionLightList.Count > maxInterventionCount)
+                                positiveList.RemoveAt(0);
+                            }
+
+                            if (iteration > maxIterations / 2)
+                            {
+                                if (iteration >= maxIterations || negativeList.Count <= 1)
                                 {
-                                    settings.interventionLightList.RemoveAt(0);
+                                    // either we are already failing or we are working with the defaults
+                                    // => reset the list
+                                    negativeList.Clear();
+                                    negativeList.Add(illuminanceLog * (useLightTheme ? 0.8 : 1.2));
+                                }
+                                else
+                                {
+                                    // just try to get rid of the least trustworthy data points
+                                    negativeList.RemoveAt(useLightTheme ? negativeList.GetMaxValIndex() : negativeList.GetMinValIndex());
                                 }
                             }
-                            else
-                            {
-                                settings.interventionDarkList.Add(Math.Log(currentIlluminance));
-                                while (settings.interventionDarkList.Count > maxInterventionCount)
-                                {
-                                    settings.interventionDarkList.RemoveAt(0);
-                                }
-                            }
-                            if (settings.interventionDarkList.Count < 1 || settings.interventionLightList.Count < 1)
-                            {
-                                break;
-                            }
+
                             var interventionCount = settings.interventionDarkList.Count + settings.interventionLightList.Count;
                             var illuminances = new double[interventionCount];
                             var lightThemes = new bool[interventionCount];
@@ -85,8 +107,8 @@ namespace BrightnessSwitch
                                 listIndex++;
                             }
                             predictionModel.Train(illuminances, lightThemes, weights);
-                            var prediction = predictionModel.Predict(Math.Log(currentIlluminance));
-                            if (prediction.result == useLightTheme)
+                            var prediction = predictionModel.Predict(illuminanceLog);
+                            if (prediction.result == useLightTheme && prediction.certainty > 0.2)
                             {
                                 settings.SaveSettings(predictionModel.b, predictionModel.w, trayIcon.AutoSwitchEnabled);
                                 break;
@@ -95,7 +117,10 @@ namespace BrightnessSwitch
                     }
                 }
 
-                lightControl.SetTheme(useLightTheme);
+                if (!lightControl.SetTheme(useLightTheme))
+                {
+                    MessageBox.Show("It seems like the theme couldn't be switched.", "BrightnessSwitch", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             };
             lightControl.OnThemeSwitch += (object? sender, bool useLightTheme) => trayIcon.SetTheme(useLightTheme);
 
