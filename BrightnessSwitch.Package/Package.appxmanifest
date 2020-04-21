@@ -10,7 +10,7 @@
   <Identity
     Name="2595StephanTroyer.BrightnessSwitch"
     Publisher="CN=5E1C7B43-8F35-4F79-B41B-3E55190119C0"
-    Version="1.1.0.0" />
+    Version="1.1.1.0" />
 
   <Properties>
     <DisplayName>BrightnessSwitch</DisplayName>
