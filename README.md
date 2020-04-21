@@ -22,7 +22,7 @@ If automatic switching is enabled and one switches the theme, machine learning (
 
 ## Running the app
 
-The easiest and recommended way is to use the [Microsoft Store](https://www.microsoft.com/store/productId/9NK5PND0SQ07) version. If you prefer to manually run the app, follow these instructions:
+The easiest and recommended way is to use the [Microsoft Store](https://www.microsoft.com/store/productId/9NK5PND0SQ07) version. If you prefer to manually run the app, follow these steps:
 
 Download the [latest release](https://github.com/stephtr/BrightnessSwitch/releases) and extract it to a folder of your choice. The app is written in C# (.NET 5.0) and therefore needs the [Desktop Runtime 5.0](https://dotnet.microsoft.com/download/dotnet/5.0#runtime-desktop-5.0.0-preview.2) to be installed. Then run `BrightnessControl.exe`, autostart with Windows can be enabled via the context menu.
 
