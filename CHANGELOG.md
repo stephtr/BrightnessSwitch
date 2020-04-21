@@ -1,9 +1,10 @@
 # Changelog
 
-## unreleased
+## 1.1.1
 
 - Fix bug on devices without light sensor
 - Optimized machine learning model
+- First release in the [Microsoft Store](https://www.microsoft.com/store/productId/9NK5PND0SQ07)
 
 ## 1.1.0
 
