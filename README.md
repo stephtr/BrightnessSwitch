@@ -6,7 +6,7 @@ _Do you have a notebook with Fn and function keys combined and have issues with 
 
 ---
 
-This small app automatically switches between Windows' Light- and Dark-Theme, depending on the ambient brightness, detected via your device's light sensor.
+BrightnessSwitch automatically switches between Windows' Light- and Dark-Theme, depending on the ambient brightness, detected via your device's light sensor.
 
 ![Screenshot](images/screenshot.png)<br />
 _Screenshot of the app_
