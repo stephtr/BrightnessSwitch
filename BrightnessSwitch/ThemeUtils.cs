@@ -20,6 +20,7 @@ namespace BrightnessSwitch
                     FileName = "reg",
                     Arguments = @"ADD HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize /v AppsUseLightTheme /t REG_DWORD /d " + (useLightTheme ? "1" : "0") + " /f",
                     CreateNoWindow = true,
+                    WindowStyle = ProcessWindowStyle.Hidden,
                 };
                 Process.Start(psi);
                 psi.Arguments = @"ADD HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize /v SystemUsesLightTheme /t REG_DWORD /d " + (useLightTheme ? "1" : "0") + " /f";
@@ -40,6 +41,7 @@ namespace BrightnessSwitch
                 {
                     FileName = "reg",
                     CreateNoWindow = true,
+                    WindowStyle = ProcessWindowStyle.Hidden,
                 };
                 Process.Start(psi);
             }
