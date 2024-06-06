@@ -26,6 +26,10 @@ The easiest and recommended way is to use the [Microsoft Store](https://www.micr
 
 Download the [latest release](https://github.com/stephtr/BrightnessSwitch/releases) and extract it to a folder of your choice. The app is written in C# (.NET 5.0) and therefore needs the [Desktop Runtime 5.0](https://dotnet.microsoft.com/download/dotnet/5.0#runtime-desktop-5.0.0-preview.2) to be installed. Then run `BrightnessControl.exe`, autostart with Windows can be enabled via the context menu.
 
+## Known issues
+
+* [#8](https://github.com/stephtr/BrightnessSwitch/issues/8): On Windows 11, some apps (like Explorer) don't fully respect the theme change. So far, I don't know of any way to circumvent that.
+
 ## Privacy
 
 The app itself doesn't send any data to any server. For the Microsoft Store version, Windows may send some diagnostic informations to Microsoft.
